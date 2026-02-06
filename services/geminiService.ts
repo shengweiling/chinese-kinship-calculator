@@ -3,7 +3,7 @@ import { KinshipResult } from "../types";
 
 // Configuration for Baidu Qianfan via OpenAI SDK compatibility
 const client = new OpenAI({
-  apiKey: import.meta.env.VITE_BAIDU_QIANFAN_API_KEY,
+  apiKey: import.meta.env.VITE_BAIDU_QIANFAN_API_KEY || process.env.VITE_BAIDU_QIANFAN_API_KEY,
   baseURL: 'https://qianfan.baidubce.com/v2',
   dangerouslyAllowBrowser: true // Required since we are calling from the browser
 });
