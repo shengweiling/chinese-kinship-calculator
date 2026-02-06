@@ -1,0 +1,5 @@
+{
+  "name": "Chinese Kinship Calculator",
+  "description": "A smart relative title calculator that uses AI to determine complex family relationships, visualize the family tree, and explain the logic step-by-step.",
+  "requestFramePermissions": []
+}
