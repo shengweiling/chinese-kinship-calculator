@@ -1,0 +1,184 @@
+<!-- 自定义导航栏 -->
+<view class="custom-nav" style="padding-top: {{statusBarHeight}}px;">
+  <view class="nav-content">
+    <view class="nav-left">
+     
+      <text class="nav-title">👨‍👩‍👧‍👦亲戚计算器</text>
+    </view>
+    <text class="nav-badge">AI 驱动</text>
+  </view>
+</view>
+
+<!-- 主内容区 -->
+<view class="main-container {{pageLocked ? 'page-locked' : ''}}" style="padding-top: {{navHeight}}px;">
+  
+  <!-- 引导文字 -->
+  <block wx:if="{{!result && !loading}}">
+    <view class="intro-section">
+      <text class="intro-title">搞不清亲戚关系？</text>
+      <text class="intro-subtitle">输入关系链，例如"我妈妈的哥哥的妻子"，AI 帮你一键搞定称呼。</text>
+    </view>
+  </block>
+
+  <!-- 输入区域 -->
+  <view class="card">
+    <view class="card-title input-title">关系输入</view>
+    
+    <!-- 输入框 -->
+    <textarea 
+      class="input"
+      value="{{inputString}}"
+      bindinput="onInputChange"
+      placeholder="例如：我妈妈的哥哥的妻子"
+      maxlength="200"
+    />
+    <view class="input-hint">
+      {{inputString.length > 0 ? '当前输入: 我' + inputString : '请点击下方按钮或直接输入'}}
+    </view>
+
+    <!-- 关系按钮网格 -->
+    <view class="relation-grid">
+      <view 
+        wx:for="{{relations}}" 
+        wx:key="label"
+        class="relation-btn {{loading ? 'disabled' : ''}}"
+        bindtap="handleAddRelation"
+        data-value="{{item.value}}"
+      >
+        {{item.label}}
+      </view>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="action-btns">
+      <button 
+        class="btn btn-secondary"
+        bindtap="handleBackspace"
+        disabled="{{loading || inputString.length === 0}}"
+      >
+        <text class="btn-icon">⌫</text>
+        <text>回退</text>
+      </button>
+      <button 
+        class="btn btn-danger"
+        bindtap="handleClear"
+        disabled="{{loading || inputString.length === 0}}"
+      >
+        <text class="trash-icon">🗑</text>
+        <text>清空</text>
+      </button>
+      <button 
+        class="btn btn-primary btn-calculate"
+        bindtap="handleCalculate"
+        disabled="{{loading || inputString.length === 0}}"
+      >
+        <block wx:if="{{loading}}">
+          <view class="btn-spinner"></view>
+        </block>
+        <block wx:else>
+          <text>计算关系</text>
+          <text class="btn-icon">→</text>
+        </block>
+      </button>
+    </view>
+  </view>
+
+  <!-- 错误提示 -->
+  <view wx:if="{{error}}" class="error-card animate-fade-in">
+    <text class="error-icon">⚠</text>
+    <text class="error-text">{{error}}</text>
+  </view>
+
+  <!-- 加载状态 -->
+  <view wx:if="{{loading}}" class="loading-section animate-fade-in">
+    <view class="loading-spinner-large"></view>
+    <text class="loading-text">正在分析复杂关系网络...</text>
+  </view>
+
+  <!-- 结果展示 -->
+  <block wx:if="{{result && !loading}}">
+    <view class="result-card animate-fade-in-up">
+      <!-- 切换分析按钮 -->
+      <view class="analysis-toggle" bindtap="toggleAnalysis">
+        <text class="toggle-icon">📖</text>
+        <text class="toggle-text">{{showAnalysis ? '隐藏计算过程' : '查看计算过程'}}</text>
+        <text class="toggle-arrow">{{showAnalysis ? '﹤' : '﹥'}}</text>
+      </view>
+
+      <view class="result-content">
+        <view class="result-badge">
+          <text class="badge-icon">✨</text>
+          <text>计算结果</text>
+        </view>
+        <text class="result-label">你应该叫他/她</text>
+        <view class="result-title">
+          <text class="result-icon">👤</text>
+          <text class="result-text">{{result.finalTitle}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 关系图谱和计算过程分析弹窗 -->
+    <view wx:if="{{showAnalysis}}" class="modal-overlay" bindtap="toggleAnalysis">
+      <view class="modal-content animate-fade-in-up" catchtap="stopPropagation">
+        <!-- 关闭按钮 -->
+        <view class="modal-close-btn" catchtap="toggleAnalysis">✕</view>
+
+        <!-- 弹窗内容滚动区 -->
+        <scroll-view class="modal-scroll-content" scroll-y="true">
+          <!-- 关系图谱 -->
+          <view class="modal-section">
+            <view class="card-title graph-title">关系图谱可视化</view>
+            <view class="flowchart-container">
+              <view wx:if="{{flowchartNodes.length > 0}}" class="flowchart-vertical">
+                <view wx:for="{{flowchartNodes}}" wx:key="index" class="flowchart-step">
+                  <!-- 节点 -->
+                  <view class="flowchart-node-box node-group-{{item.group}}">
+                    <text class="node-label">{{item.label}}</text>
+                  </view>
+                  <!-- 连接线（最后一个节点不显示） -->
+                  <view wx:if="{{index < flowchartNodes.length - 1}}" class="flowchart-connector">
+                    <text>|</text>
+                    <view class="connector-row">
+                      <text class="connector-label-left">{{flowchartLinks[index].label}}</text>
+                      <view class="connector-line-vertical"></view>
+                    </view>
+                    <text>↓</text>
+                  </view>
+                </view>
+              </view>
+            </view>
+          </view>
+
+          <!-- 计算过程分析 -->
+          <view wx:if="{{result.steps.length > 0}}" class="modal-section">
+            <view class="card-title analysis-title">计算过程分析</view>
+            <view class="steps-list">
+            <view wx:for="{{result.steps}}" wx:key="index" class="step-item">
+              <view class="step-left">
+                <view class="step-number {{index === result.steps.length - 1 ? 'step-number-final' : ''}}">
+              {{index + 1}}
+            </view>
+            <view wx:if="{{index !== result.steps.length - 1}}" class="step-line"></view>
+          </view>
+          <view class="step-content">
+            <view class="step-header">
+              <text class="step-relation">{{item.step}}</text>
+              <text class="step-arrow">→</text>
+              <text class="step-result">{{item.result}}</text>
+            </view>
+            <view class="step-explanation">{{item.explanation}}</view>
+          </view>
+        </view>
+          </view>
+        </view>
+        </scroll-view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 页脚 -->
+  <view class="footer">
+    <text>© {{currentYear}} Chinese Kinship Calculator</text>
+  </view>
+</view>
