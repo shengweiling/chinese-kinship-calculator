@@ -102,6 +102,22 @@ Page({
     });
   },
 
+  // 分享给好友/群
+  onShareAppMessage() {
+    return {
+      title: '亲戚计算器 - 搞不清亲戚关系？AI帮你一键搞定称呼',
+      path: '/pages/index/index'
+    };
+  },
+
+  // 分享到朋友圈
+  onShareTimeline() {
+    return {
+      title: '亲戚计算器 - 中国亲戚关系智能计算工具',
+      query: ''
+    };
+  },
+
   // 输入框变化
   onInputChange(e) {
     this.setData({
